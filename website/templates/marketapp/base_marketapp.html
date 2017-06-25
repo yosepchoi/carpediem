@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Records{% endblock title %}
+
+{% block content %}  
+
+<div class="row">
+            <div class="col-lg-2">
+                <div class="list-group">
+                    <a href="{% url 'home' %}" class="list-group-item">통   계</a>
+                    <a href="{% url 'trading' %}" class="list-group-item">매매 기록</a>
+                    <a href="{% url 'initialize' %}" class="list-group-item">Initialize</a>
+                </div>
+            </div>
+            {# the document body #}
+            <div class="col-lg-9">
+                <div class="container">
+                {% block marketapp_content %}{%endblock marketapp_content %}
+                </div>
+            </div>
+</div>
+{% endblock content %}

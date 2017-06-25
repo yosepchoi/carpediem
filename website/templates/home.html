@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Overview{% endblock title %}
+{% block content %}  
+
+<div class="row">
+    <form action="/?test=hi">
+    <input type="text" id="state" name="state" value='hihi' placeholder="XXX">
+    <input type="submit" value="Go" />
+</form>
+</div>
+
+<script>
+window.onload = function(){
+    $.get('/', function(data){
+        localStorage.setItem("products", JSON.stringify(data));
+    })
+};
+</script>
+{% endblock content %}
