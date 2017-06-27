@@ -4,20 +4,27 @@
 
 {% block content %}  
 
-<div class="row">
-            <div class="col-lg-2">
-                <p class="lead" style="font-weight:bold">게임기록</p>
-                <div class="list-group">
-                    <a href="{% url 'home' %}" class="list-group-item">통   계</a>
-                    <a href="{% url 'trading' %}" class="list-group-item">매매 기록</a>
-                    <a href="{% url 'initialize' %}" class="list-group-item">Initialize</a>
-                </div>
-            </div>
+<nav class="navbar navbar-default sidebar" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
+    <span class="sr-only">Toggle navigation</span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+  </button>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
+            <ul class="nav navbar-nav navbutton">
+                <li class="active"><a href="{% url 'trading' %}">Records<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-list"></span></a></li>
+                <li><a href="#">Account<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-usd"></span></a></li>
+                <li><a href="#">Tags<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tags"></span></a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="main">
             {# the document body #}
-            <div class="col-lg-9">
-                <div class="container">
-                {% block recordapp_content %}{%endblock recordapp_content %}
-                </div>
-            </div>
+            {% block recordapp_content %}{%endblock recordapp_content %}
 </div>
 {% endblock content %}

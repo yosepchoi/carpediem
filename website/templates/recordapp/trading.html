@@ -3,20 +3,20 @@
 {% block title %}Trading{% endblock title %}
 
 {% block recordapp_content %}
-<div class="row">
+<div class="container-fluid">
     <!-- ========= 여기부터 미결제 매매 =========== -->
     <div class="game">
-      <h4> 진행중인 게임 </h4>
+      <h4> In Progess </h4>
       <table class="table table-condensed table-bordered table-hover games">
           <thead>
             <tr>
               <th style='width:5%'>#</th>
-              <th style='width:17%'>게시일</th>
-              <th style='width:25%'>상  품</th>
-              <th style='width:13%'>포지션</th>
-              <th style='width:15%'>수  익</th>
-              <th style='width:15%'>단위수익(계약)</th>
-              <th style='width:10%'>매매횟수</th>
+              <th style='width:17%'>Date</th>
+              <th style='width:25%'>Product</th>
+              <th style='width:13%'>Position</th>
+              <th style='width:15%'>Profit</th>
+              <th style='width:15%'>Profit / Con</th>
+              <th style='width:10%'>Trades #</th>
             </tr>
             <tbody>
               {% for game in open_game %}
@@ -70,17 +70,17 @@
     <hr>
     <!-- ========= 여기부터 매매결과 테이블 =========== -->
     <div class="trading-records">
-      <h4> 게임 내역 </h4>
+      <h4> Statement </h4>
       <table class="table table-condensed table-bordered table-hover table-striped statement-table games">
           <thead>
               <tr>
                   <th style='width:5%'>#</th>
-                  <th style='width:17%'>게시일</th>
-                  <th style='width:25%'>상  품</th>
-                  <th style='width:13%'>포지션</th>
-                  <th style='width:15%'>수  익</th>
-                  <th style='width:15%'>단위수익</th>
-                  <th style='width:10%'>매매횟수</th>
+                  <th style='width:17%'>Date</th>
+                  <th style='width:25%'>Product</th>
+                  <th style='width:13%'>Poisition</th>
+                  <th style='width:15%'>Profit</th>
+                  <th style='width:15%'>Profit / Con</th>
+                  <th style='width:10%'>Trades #</th>
               </tr>
           </thead>
           <tbody>

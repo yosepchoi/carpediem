@@ -3,29 +3,9 @@
 {% block title %}Records{% endblock title %}
 {% block marketapp_content %}  
 
-<div class="row">
-    <!-- 로그인 버튼 -->
+<div class="container-fluid">
     <div class="first row">
-
-        <div class="col-md-12">
-            <button class="btn btn-default" onclick="$('#manager').toggleClass('hidden');">
-                <span class="glyphicon glyphicon-download-alt"></span>
-            </button>
-        </div>
-        
-        <div class="col-md-12 hidden" id="manager">
-            <hr>
-            <button class="btn btn-success" onclick="broker.db_manager('marketinfo', 'all');">전부</button>
-            <button class="btn btn-default" onclick="broker.db_manager('marketinfo');">시장정보</button>   
-            <button class="btn btn-default" onclick="broker.db_manager('rawdata', 'day')" style="margin-left:20px">일봉</button>
-            <button class="btn btn-default" onclick="broker.db_manager('rawdata', 'minute')" style="margin-left:20px">분봉</button>
-            <button class="btn btn-default" onclick="broker.db_manager('backup')" style="margin-left:20px">back up</button>
-        </div>
-    </div>
-    
-    <div class="second row">
         <!-- 관심종목 화면 -->
-        <hr>
         <div class="products-list col-md-7">
             <ul class="nav nav-tabs products">
                 <li class="active" id="FAV"><a onclick="selectMarket('FAV');">FAV</a></li>
@@ -89,7 +69,7 @@
         </div>
     </div>
     <!-- status bar -->
-    <div class="row">
+    <nav class="navbar navbar-default navbar-fixed-bottom">
         <div class="status-bar">
             <div style="float:left;display:inline">
                 <span class="glyphicon glyphicon-volume-up"></span>
@@ -105,7 +85,7 @@
                 
             </div>
         </div>
-    </div>
+    </nav>
 
 </div>
 

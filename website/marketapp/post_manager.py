@@ -59,8 +59,8 @@ class post:
             else:
                 if product.active != group['active']:
                     #case 7
-                    if Code.objects.get(pk=group['active']).date \
-                        <= Code.objects.get(pk=product.active).date:
+                    if Code.objects.get(pk=group['active']).month \
+                        <= Code.objects.get(pk=product.active).month:
                         pass
 
                     #case 5

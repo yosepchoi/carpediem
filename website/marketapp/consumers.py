@@ -38,9 +38,10 @@ def ws_message(message):
             data['args']['activeinfo'] = post.get_active()
 
         # 전체 자동 진행 flag
-        if data["worker"] == "manager" and data["args"]["timeframe"] == "all":
+        if data["worker"] == "manager" and "timeframe" in data["args"]\
+           and data["args"]["timeframe"] == "all":
             data['args']['auto'] = True
-        else:
+        elif data["worker"] == "manager":
             data['args']['auto'] = False
 
         Channel(data.pop("worker")).send(data)

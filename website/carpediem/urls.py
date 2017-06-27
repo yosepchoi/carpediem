@@ -32,11 +32,14 @@ urlpatterns = [
     url(r'^records/account', recordviews.InitializeView.as_view(), name="initialize"),
 
     # Marketapp pages
-    url(r'^market/', marketviews.MarketView.as_view(), name="marketview"),
+    url(r'^market/', marketviews.MarketView.as_view(), name="market"),
 
     #Login/Logout URLs
     url(r'^login/$', 
      auth_views.login, {'template_name': 'login.html'}, name='login'),
     url(r'^logout/$',
      auth_views.logout, {'next_page': '/login/'}, name='logout'),
+
+    #handle 404 : redirect to home
+    url(r'.*?', recordviews.Home.as_view(), name="home")
 ]
