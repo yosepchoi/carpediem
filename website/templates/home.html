@@ -3,42 +3,25 @@
 {% block title %}Overview{% endblock title %}
 {% block content %}  
 
-<div class="row">
-    <div class="container">
-        <div id="chart"></div>
+<div class="container">
+    <div class="first-row">
+        <div class="timeframe">
+            <button class="btn btn-default btn-xs" type="button" onclick="timeFrame('tick', 1)">T</button>
+            <button class="btn btn-default btn-xs" type="button" onclick="timeFrame('day', 1)">D</button>
+            <button class="btn btn-default btn-xs" type="button" onclick="timeFrame('week', 1)">W</button>
+            <button class="btn btn-default btn-xs" type="button" onclick="timeFrame('month', 1)">M</button>
+        </div>
+        <div id='equity-chart'></div>
     </div>
 </div>
 
-<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/stock/highstock.js"></script>
 <script>
-window.onload = function(){
-    var myChart = Highcharts.chart('chart', {
-        chart: {
-            type: 'bar'
-        },
-        title: {
-            text: 'Fruit Consumption'
-        },
-        xAxis: {
-            categories: ['Apples', 'Bananas', 'Oranges']
-        },
-        yAxis: {
-            title: {
-                text: 'Fruit eaten'
-            }
-        },
-        series: [{
-            name: 'Jane',
-            data: [1, 0, 4]
-        }, {
-            name: 'John',
-            data: [5, 7, 3]
-        }]
-    });
-    
-    $.get('/', function(data){
-        localStorage.setItem("products", JSON.stringify(data));
-    })
-};
+    var source = {
+        profit: {{ profit }},
+        commission: {{ commission }},
+        volume: {{ volume }}
+    };
 </script>
+<script src="{% static "js/chart.js" %}"></script>
 {% endblock content %}

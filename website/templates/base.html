@@ -39,10 +39,10 @@
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li>
-                        <a href="{% url 'trading' %}">Records</a>
+                        <a href="{% url 'record' %}" {% if request.path == "/trading/record" %}style="color:white;"{%endif%}>Trading</a>
                     </li>
                     <li>
-                        <a href="{% url 'market' %}">Market</a>
+                        <a href="{% url 'market' %}" {% if request.path == "/market/" %}style="color:white;"{%endif%}>Market</a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav" style="float:right">

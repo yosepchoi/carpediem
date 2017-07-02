@@ -54,8 +54,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
-    'recordapp.apps.RecordappConfig',
-    'marketapp.apps.MarketappConfig'
+    'trading.apps.TradingConfig',
+    'market.apps.MarketConfig',
+    'django.contrib.humanize'
 ]
 
 MIDDLEWARE = [
@@ -148,7 +149,7 @@ STATICFILES_DIRS = (
 
 # custom variables
 LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/login'
+LOGIN_URL = '/login/'
 
 
 # session configuration

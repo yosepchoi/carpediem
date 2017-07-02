@@ -1,0 +1,108 @@
+{% extends 'trading/base_trading.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}Account{% endblock title %}
+
+{% block trading_content %}
+<div class="main">
+    <div class="container-fluid">
+        <!-- ========= 여기부터 매매결과 테이블 =========== -->
+        <div class="balance-sheet">
+          <h4> Balance Sheet </h4>
+          <table class="table table-condensed table-bordered table-hover table-striped statement-table">
+              <thead>
+                  <tr>
+                      <th style='width:5%'>#</th>
+                      <th style='width:21%'>Date</th>
+                      <th style='width:23%'>CASH</th>
+                      <th style='width:23%'>KRW</th>
+                      <th style='width:23%'>USD</th>
+                      <th style='width:5%'></th>
+                  </tr>
+              </thead>
+              <tbody>
+                {% for balance in account %}
+                  <tr>
+                      <td style='width:5%'>{{ balance.id }}</td>
+                      <td style='width:21%'>{{ balance.date |date:"Y-m-d" }}</td>
+                      <td style='width:23%;
+                        color: {% if balance.cash > 0 %}blue{% else %} red {% endif %}'>
+                        {{ balance.cash | default:""| intcomma}}{{ balance.cash | yesno:" ₩, , "}}</td>
+                      <td style='width:23%;
+                        color: {% if balance.krw > 0 %}blue{% else %} red {% endif %}'>
+                        {{ balance.krw | default:""| intcomma }}{{ balance.krw | yesno:" ₩, , "}}</td>
+                      <td style='width:23%;
+                        color: {% if balance.usd > 0 %}blue{% else %} red {% endif %}'>
+                        {{ balance.usd | default:""| intcomma }}{{ balance.usd | yesno:" $, , "}}</td>
+                      <td style='width:5%'>
+                      </td>
+                  </tr>
+                {% endfor %}
+                <form id="account-form" action="{% url 'account' %}" method="post">
+                  {% csrf_token %}
+                  <input type="text" value="new_balance" name="form_type" hidden></input>
+                  <tr id='new-balance' hidden>
+                    <td style='width:5%'></td>
+                    <td style='width:21%'><input type='datetime' class='form-control input-sm' name='pub_date' required></td>
+                    <td style='width:23%'><input type='number' class='form-control input-sm' name='krw'></td>
+                    <td style='width:23%'><input type='number' class='form-control input-sm' name='usd'></td>
+                    <td style='width:23%'><input type='number' class='form-control input-sm' name='euro'></td>
+                    <td style='width:5%'></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style='width:26%'> Profit </td>
+                    <td style='width:23%;'></td>
+                    <td style='width:23%;'></td>
+                    <td style='width:23%;
+                        color: {% if total.profit_usd > 0 %}blue{% else %} red {% endif %}'>
+                        {{ total.profit_usd | default:""| intcomma }}{{ total.profit_usd | yesno:" $, , "}}</td>
+                    <td style='width:5%'></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style='width:26%'> Total </td>
+                    <td style='width:23%;
+                        color: {% if total.cash > 0 %}blue{% else %} red {% endif %}'>
+                        {{ total.cash | default:""| intcomma}}{{ total.cash | yesno:" ₩, , "}}</td>
+                    <td style='width:23%;
+                        color: {% if total.krw > 0 %}blue{% else %} red {% endif %}'>
+                        {{ total.krw | default:""| intcomma }}{{ total.krw | yesno:" ₩, , "}}</td>
+                    <td style='width:23%;
+                        color: {% if total.usd > 0 %}blue{% else %} red {% endif %}'>
+                        {{ total.usd | default:""| intcomma }}{{ total.usd | yesno:" $, , "}}</td>
+                    <td style='width:5%'></td>
+                  </tr>
+              </tbody>
+          </table>
+          <div>
+            <button id="save-button" type="submit" form="game-form" class="btn btn-default" style="font-weight: bold; width: 70px; float: right; display:none;">Save</button>
+            <button id="add-button" type="button" onclick="newBalance()" class="btn btn-default" style="font-weight: bold; width: 70px; float: right;">Write</button>
+          </div>
+          </form>
+        </div>
+<!-- ===============  Pagination  ===========================================--> 
+        {% if is_paginated %}
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+            </li>
+          {% else %}
+            <li class="disabled"><span>&laquo;</span></li>
+          {% endif %}
+          {% for i in paginator.page_range %}
+            {% if page_obj.number == i %}
+              <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+            {% else %}
+              <li><a href="?page={{ i }}">{{ i }}</a></li>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li><a href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+          {% else %}
+            <li class="disabled"><span>&raquo;</span></li>
+          {% endif %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock trading_content %}

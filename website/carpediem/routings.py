@@ -1,5 +1,5 @@
 from channels.routing import route
-from marketapp.consumers import ws_message, ws_connect, ws_disconnect, broker_msg, post_work
+from market.consumers import ws_message, ws_connect, ws_disconnect, broker_msg, post_work
 
 channel_routing = [
     route("websocket.connect", ws_connect),

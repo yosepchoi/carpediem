@@ -7,14 +7,14 @@ from datetime import date
 # Create your models here.
 class Product(models.Model):
     """ 상품 정보 """
-    name = models.CharField(max_length=50, unique=True)
-    group = models.CharField(primary_key=True, max_length=30, unique=True)
-    market = models.CharField(max_length=10)
-    active = models.CharField(max_length=10,null=True, blank=True)
-    front = models.CharField(max_length=10,null=True, blank=True)
-    activated_date = models.DateField(null=True, blank=True)
-    price_gap = models.DecimalField(max_digits=20, decimal_places=7, null=True, blank=True) 
-    currency = models.CharField(max_length=10)
+    name = models.CharField(max_length=50, unique=True) # 상품명
+    group = models.CharField(primary_key=True, max_length=30, unique=True) #그룹 코드
+    market = models.CharField(max_length=10) #시장구분
+    active = models.CharField(max_length=10,null=True, blank=True) #액티브 월물명
+    front = models.CharField(max_length=10,null=True, blank=True) #근월물명
+    activated_date = models.DateField(null=True, blank=True) #액티브 월물 변경일
+    price_gap = models.DecimalField(max_digits=20, decimal_places=7, null=True, blank=True) #가격 갭 
+    currency = models.CharField(max_length=10) #기준 통화
     open_margin = models.DecimalField(max_digits=10, decimal_places=2)
     keep_margin = models.DecimalField(max_digits=10, decimal_places=2)
     open_time = models.TimeField()
@@ -123,16 +123,22 @@ class Exit(models.Model):
         super(Exit, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 class Account(models.Model):
     """
-    계좌 입출금 내역 - 달러 입출금 내역만 포함
+    계좌
     """
-    deposit = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
-    withdraw = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField(null=True, blank=True)
+    krw = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    usd = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cash = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
+    def __str__(self):
+        return str(self.date)
+
+
+# Web forms
 class GameForm(ModelForm):
     pub_date = forms.DateField(input_formats=['%Y-%m-%d'])
     class Meta:

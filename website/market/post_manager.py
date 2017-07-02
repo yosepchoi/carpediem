@@ -1,7 +1,7 @@
 from datetime import datetime
 from channels import Channel
 from channels.log import setup_logger
-from recordapp.models import Product, Code
+from trading.models import Product, Code
 
 logger = setup_logger(__name__)
 COMISSION = 7 #수수료

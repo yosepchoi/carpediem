@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 #from channels import Channel
 
-from recordapp.models import Product
+from trading.models import Product
 
 decorators = [login_required, ensure_csrf_cookie]
 

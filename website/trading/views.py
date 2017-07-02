@@ -1,3 +1,6 @@
+from collections import defaultdict
+import json
+
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
 from django.shortcuts import render, redirect
@@ -9,9 +12,9 @@ from django.core import serializers
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Sum
-import json
 
-from .models import Product, Entry, Exit, Game, EntryForm, GameForm, ExitForm
+from .models import Product, Entry, Exit, Game, EntryForm, GameForm, ExitForm\
+                    ,Account
 
 
 decorators = [login_required, ensure_csrf_cookie]
@@ -35,7 +38,29 @@ class Home(TemplateView):
                     response[mkt][product['pk']] = product['fields']
 
             return JsonResponse(response)
-        return render(request, self.template_name)
+
+        # source data 가공하기
+        source = Exit.objects.all().values_list(\
+                'exit_date', 'profit', 'commission'
+               ).order_by('exit_date')
+        data = defaultdict(list)
+        profit = 0 #수익
+        commission = 0 #수수료
+        for idx, item in enumerate(source):
+            commission += float(item[2])
+            timestamp = item[0].timestamp()*1000 + idx
+
+            open = profit
+            close = profit+float(item[1])
+            high = max(open, close)
+            low = min(open, close)
+            
+            data['profit'].append([timestamp, open, high, low, close])
+            data['volume'].append([timestamp, 1])
+            data['commission'].append([timestamp, commission])
+            profit += float(item[1])
+
+        return render(request, self.template_name, data )
 
 @method_decorator(decorators, name='dispatch')
 class TradingView(ListView):
@@ -43,7 +68,7 @@ class TradingView(ListView):
      매매기록과 미결제 약정을 볼 수 있는 페이지
     """
     model = Game
-    template_name = 'recordapp/trading.html'
+    template_name = 'trading/record.html'
     context_object_name = 'games'
     paginate_by = 30
     queryset = Game.objects.filter(is_completed=True).order_by('-id')
@@ -222,7 +247,7 @@ class TradingView(ListView):
 
             return JsonResponse({'succeed': succeed, 'data': data})
 
-        return redirect('trading')
+        return redirect('record')
 
     def get_game_detail_context(self, game_id):
         """ game row 클릭시 열리는  modal 화면 context data"""
@@ -239,18 +264,24 @@ class TradingView(ListView):
 
 
 
-class InitializeView(TemplateView):
-    template_name = 'recordapp/initialize.html'
+class AccountView(ListView):
+    """
+     매매기록과 미결제 약정을 볼 수 있는 페이지
+    """
+    model = Account
+    template_name = 'trading/account.html'
+    context_object_name = 'account'
+    paginate_by = 30
+    queryset = Account.objects.order_by('-date')
+    #ordering = ['-id']
 
-    def get(self, request):
-
-        from channels import Channel
-        message = {}
-        Channel('background-hello').send(message)
-        
-        if request.GET.__contains__('statement'):
-            self.init_records()
-        if request.GET.__contains__('products'):
-            self.init_products()
-        return render(request, self.template_name)
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profit_usd = Exit.objects.all().aggregate(Sum('profit'))['profit__sum']
+        context['total'] = Account.objects.all().aggregate(
+            krw=Sum('krw'),
+            usd=Sum('usd') + profit_usd,
+            cash=Sum('cash')
+        )
+        context['total']['profit_usd'] = float(profit_usd)
+        return context

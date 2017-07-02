@@ -18,18 +18,18 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.views.generic.base import RedirectView
 
-from recordapp import views as recordviews
-from marketapp import views as marketviews
+from trading import views as tradingviews
+from market import views as marketviews
 
 urlpatterns = [
     # Admin pages
-    url(r'^admin/', admin.site.urls, name="admin"),
+    url(r'^admin', admin.site.urls, name="admin"),
     #url(r'^$', RedirectView.as_view(pattern_name='overview', permanent=False)),
 
-    # Recordapp pages
-    url(r'^$', recordviews.Home.as_view(), name="home"),
-    url(r'^records/trading', recordviews.TradingView.as_view(), name="trading"),
-    url(r'^records/account', recordviews.InitializeView.as_view(), name="initialize"),
+    # Record pages
+    url(r'^$', tradingviews.Home.as_view(), name="home"),
+    url(r'^trading/record', tradingviews.TradingView.as_view(), name="record"),
+    url(r'^trading/account', tradingviews.AccountView.as_view(), name="account"),
 
     # Marketapp pages
     url(r'^market/', marketviews.MarketView.as_view(), name="market"),
@@ -41,5 +41,5 @@ urlpatterns = [
      auth_views.logout, {'next_page': '/login/'}, name='logout'),
 
     #handle 404 : redirect to home
-    url(r'.*?', recordviews.Home.as_view(), name="home")
+    url(r'.*?', tradingviews.Home.as_view(), name="home")
 ]

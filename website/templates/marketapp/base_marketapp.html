@@ -3,7 +3,7 @@
 {% block title %}Records{% endblock title %}
 
 {% block content %}
-<nav class="navbar navbar-default sidebar" role="navigation">
+<nav class="navbar navbar-default sidebar" role="navigation" style="position:fixed">
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
@@ -27,14 +27,10 @@
                         <li onclick="broker.db_manager('backup');"><a href="#">Backup</a></li>
                     </ul>
                 </li>
-                <li><a href="#">Libros<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-th-list"></span></a></li>
-                <li><a href="#">Tags<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tags"></span></a></li>
             </ul>
         </div>
     </div>
 </nav>
-<div class="main">
             {# the document body #}
             {% block marketapp_content %}{%endblock marketapp_content %}
-</div>
 {% endblock content %}

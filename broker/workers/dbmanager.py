@@ -280,8 +280,8 @@ class Manager:
         tr = TR.o3104
         cnt = self.query.get_block_count(tr.OUTBLOCK)
 
-        # 최근 30일치 거래량 수집
-        for i in range(10):
+        # 최근 2일치 거래량 수집
+        for i in range(3):
             date = self.query.get_field_data(tr.OUTBLOCK, 'chedate', i)
             date = datetime.strptime(date, '%Y%m%d')
             vol = int(self.query.get_field_data(tr.OUTBLOCK, 'volume', i))
@@ -487,7 +487,7 @@ class Manager:
             self.cursor.append(data)
             self.cursor.flush()
         else:
-            msg = "Nothing to update: %s , TR: %s, remained=(%s/%s)"\
+            msg = "Nothing to update: %s , TR: %s (%s/%s)"\
                   %(self.active['name'], count, len(self.activeinfo), self.codelength)
             self.logger.info(msg)
             self.reply("log", msg)
@@ -659,12 +659,12 @@ class Manager:
         count = self.query.get_tr_count_request(tr.CODE)
 
         if 'items' in locals() and items:
-            msg = "Updating Minute data: %s, TR: %s, remained=(%s/%s)"\
+            msg = "Updating Minute data: %s, TR: %s, (%s/%s)"\
                   %(self.active['name'], count, len(self.activeinfo), self.codelength)
             self.logger.info(msg)
             self.reply("log", msg)
         else:
-            msg = "Nothing to update: %s, TR: %s, remained=(%s/%s)"\
+            msg = "Nothing to update: %s, TR: %s, (%s/%s)"\
                  %(self.active['name'], count, len(self.activeinfo), self.codelength)
             self.logger.info(msg)
             self.reply("log", msg)
