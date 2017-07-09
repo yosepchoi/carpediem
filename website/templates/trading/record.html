@@ -9,17 +9,17 @@
   <div class="container-fluid">
     <!-- ========= 여기부터 미결제 매매 =========== -->
     <div class="game">
-      <h4> In Progess </h4>
+      <h4> 진행중 </h4>
       <table class="table table-condensed table-bordered table-hover games">
           <thead>
             <tr>
               <th style='width:5%'>#</th>
-              <th style='width:17%'>Date</th>
-              <th style='width:25%'>Product</th>
-              <th style='width:13%'>Position</th>
-              <th style='width:15%'>Profit</th>
-              <th style='width:15%'>Profit / Con</th>
-              <th style='width:10%'>Trades #</th>
+              <th style='width:17%'>게시일</th>
+              <th style='width:25%'>상 품</th>
+              <th style='width:13%'>포지션</th>
+              <th style='width:15%'>손 익</th>
+              <th style='width:15%'>수익/위험</th>
+              <th style='width:10%'>매매횟수</th>
             </tr>
             <tbody>
               {% for game in open_game %}
@@ -37,8 +37,8 @@
                   color: {% if game.profit > 0 %}blue {% else %} red {% endif %}">
                   {{ game.profit | floatformat | intcomma }}</td>
                 <td style="width:15%;
-                  color: {% if game.profit > 0 %}blue {% else %} red {% endif %}">
-                  {{ game.profit_per_contract | floatformat | intcomma}}</td>
+                  color: {% if game.profit_to_risk > 0 %}blue {% else %} red {% endif %}">
+                  {{ game.profit_to_risk | floatformat}}</td>
                 <td style='width:10%'>{{ game.entry_set.count }}</td>
               </tr>
               {% endfor %}
@@ -73,17 +73,17 @@
     <hr>
     <!-- ========= 여기부터 매매결과 테이블 =========== -->
     <div class="trading-records">
-      <h4> Statement </h4>
+      <h4> 기록 </h4>
       <table class="table table-condensed table-bordered table-hover table-striped statement-table games">
           <thead>
               <tr>
                   <th style='width:5%'>#</th>
-                  <th style='width:17%'>Date</th>
-                  <th style='width:25%'>Product</th>
-                  <th style='width:13%'>Poisition</th>
-                  <th style='width:15%'>Profit</th>
-                  <th style='width:15%'>Profit / Con</th>
-                  <th style='width:10%'>Trades #</th>
+                  <th style='width:17%'>게시일</th>
+                  <th style='width:25%'>상 품</th>
+                  <th style='width:13%'>포지션</th>
+                  <th style='width:15%'>손 익</th>
+                  <th style='width:15%'>수익/위험</th>
+                  <th style='width:10%'>매매횟수</th>
               </tr>
           </thead>
           <tbody>
@@ -102,8 +102,8 @@
                   color: {% if game.profit > 0 %}blue {% else %} red {% endif %}">
                   {{ game.profit | floatformat | intcomma}}</td>
                 <td style="width:15%;
-                  color: {% if game.profit > 0 %}blue {% else %} red {% endif %}">
-                  {{ game.profit_per_contract | floatformat | intcomma }}</td>
+                  color: {% if game.profit_to_risk > 0 %}blue {% else %} red {% endif %}">
+                  {{ game.profit_to_risk | floatformat }}</td>
                 <td style='width:10%'>{{ game.entry_set.count }}</td>
               </tr>
             {% endfor %}
@@ -167,14 +167,14 @@
                   <th style='width:7%'>계약수</th>
                   <th style='width:16%'>손절가</th>
                   <th style='width:16%'>매매타입</th>
-                  <th style='width:15%'>비고</th>
+                  <th style='width:15%'>종목코드</th>
                   <th style='width:5%'></th>
                 </tr>
               </thead>
               <tbody>
                 <tr id='new-entry-row' hidden>
                   <td style='width:5%'></td>
-                  <td style='width:20%'><input type='datetime' class='form-control input-sm' name='entry_date' required onclick="$(this).val(setNow());$(this).val('hi')"></td>
+                  <td style='width:20%'><input type='datetime' class='form-control input-sm' name='entry_date' required onclick="$(this).val(setNow('today'))"></td>
                   <td style='width:16%'><input type='number' class='form-control input-sm' name='entry_price' step='any' required></td>
                   <td style='width:7%'><input type='number' class='form-control input-sm' name='contracts' min='1' required></td>
                   <td style='width:16%'><input type='number' class='form-control input-sm' name='loss_cut' step='any' required></td>
@@ -182,7 +182,8 @@
                       <option value='Trend Following'>Trend Following</option>
                       <option value='Even Money' selected>Even Money</option>
                   </select></td>
-                  <td style='width:15%'><input type='text' class='form-control input-sm' name='comment'></td>
+                  <td style='width:15%'><select class='form-control input-sm' name='code' id="code">
+                  </select></td>
                   <td style='width:5%'>
                     <button type="button" onclick='saveEntry()' class="btn btn-default btn-sm" id="new-entry-btn">
                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
@@ -223,7 +224,7 @@
                 <input type='number' class='form-control input-sm' name='exit_contracts'
                        min='1' style='width:20%' placeholder="contracts">
                 <input type='datetime' class='form-control input-sm' name='exit_date' 
-                       onclick="$(this).val(setNow());" placeholder="exit date" style="width:25%">
+                       onclick="$(this).val(setNow('today'));" placeholder="exit date" style="width:25%">
                 <button type="button" onclick='saveExit()' class="btn btn-default btn-sm" id="new-entry-btn">
                  <span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
                 <button type="button" onclick="$(this)[0].parentElement.hidden = true;" class="btn btn-default btn-sm" id="new-entry-btn">

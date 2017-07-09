@@ -1,5 +1,6 @@
 from collections import defaultdict
 import json
+from datetime import datetime
 
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
@@ -14,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Sum
 
 from .models import Product, Entry, Exit, Game, EntryForm, GameForm, ExitForm\
-                    ,Account
+                    ,Account, Code, Equity
 
 
 decorators = [login_required, ensure_csrf_cookie]
@@ -23,44 +24,30 @@ decorators = [login_required, ensure_csrf_cookie]
 class Home(TemplateView):
     template_name = 'home.html'
 
-    def get(self, request, *args, **kwargs):
-        # ajax로 상품 기본 정보 전달
-        # 브라우저에서 localStroage.getItem("products") 로 받아서 쓸 수 있음
-        if request.is_ajax():
-            data = serializers.serialize("json", Product.objects.all())
-            markets = set(Product.objects.all().values_list("market", flat=True))
-            response = dict()
-
-            for mkt in markets:
-                grp = serializers.serialize("json", Product.objects.filter(market=mkt))
-                response[mkt] = dict()
-                for product in json.loads(grp):
-                    response[mkt][product['pk']] = product['fields']
-
-            return JsonResponse(response)
-
+    def get_context_data(self, **kwargs):
+        """ 차트 데이터 가공
+        변동성: |평가손익(오늘) - 평가손익(어제)|/(원금 + 손익) * 100
+        """
+        context = super().get_context_data(**kwargs)
         # source data 가공하기
-        source = Exit.objects.all().values_list(\
-                'exit_date', 'profit', 'commission'
-               ).order_by('exit_date')
-        data = defaultdict(list)
-        profit = 0 #수익
-        commission = 0 #수수료
-        for idx, item in enumerate(source):
-            commission += float(item[2])
-            timestamp = item[0].timestamp()*1000 + idx
-
-            open = profit
-            close = profit+float(item[1])
-            high = max(open, close)
-            low = min(open, close)
+        queryset= Equity.objects.all().order_by('date')
+        equity = defaultdict(list)
+        estim_y = 0 #변동성 계산용
+        for idx, item in enumerate(queryset):
+            date = datetime.combine(item.date, datetime.min.time()).timestamp()*1000 + idx
+            principal = float(item.principal)
+            profit = float(item.profit)
+            profit_estim = float(item.estimated_profit)
+            volatility = abs(profit_estim - estim_y)/(principal + profit) * 100
+            estim_y = profit_estim     
             
-            data['profit'].append([timestamp, open, high, low, close])
-            data['volume'].append([timestamp, 1])
-            data['commission'].append([timestamp, commission])
-            profit += float(item[1])
-
-        return render(request, self.template_name, data )
+            equity['principal'].append([date, principal])
+            equity['profit'].append([date, profit])
+            equity['profit_estim'].append([date, profit_estim])
+            equity['volatility'].append([date, volatility])
+        
+        context['equity'] = dict(equity)
+        return context
 
 @method_decorator(decorators, name='dispatch')
 class TradingView(ListView):
@@ -82,11 +69,17 @@ class TradingView(ListView):
     def get(self, request, *args, **kwargs):
         # modal 화면 ajax call
         if request.is_ajax():
-            game_id = request.GET.get('id')
-            context_data = self.get_game_detail_context(game_id)
-            return JsonResponse(context_data)
+            if request.GET.get('action') == 'init':
+                #data = serializers.serialize("json", Product.objects.all())
+                markets = list(Product.objects.all().values_list("name", flat=True))
+                return JsonResponse({'product_list':markets})
 
-        return  super(TradingView, self).get(request, *args, **kwargs)
+            else:
+                game_id = request.GET.get('id')
+                context_data = self.get_game_detail_context(game_id)
+                return JsonResponse(context_data)
+
+        return super(TradingView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         formtype = request.POST.get('form_type')
@@ -130,13 +123,14 @@ class TradingView(ListView):
                     pos = "smaller" if game.position else "greater"
                     msg = "Loss cut must be %s than entry price"%pos
 
-                elif game.entry_set.count() and \
-                     form.cleaned_data['entry_date'] < game.entry_set.order_by('-entry_date')[0].entry_date:
-                    msg = "Entry date must be newest"
+                #elif game.entry_set.count() and \
+                #     form.cleaned_data['entry_date'] < game.entry_set.order_by('-entry_date')[0].entry_date:
+                #    msg = "Entry date must be newest"
 
                 else:
                     entry = form.save(commit=False)
                     entry.game = Game.objects.get(pk=request.POST.get('game_id'))
+                    entry.code = Code.objects.get(code=request.POST.get('code'))
                     entry.save()
                     data = self.get_game_detail_context(entry.game.id)
                     return JsonResponse({'succeed': True, 'data': data})
@@ -252,10 +246,17 @@ class TradingView(ListView):
     def get_game_detail_context(self, game_id):
         """ game row 클릭시 열리는  modal 화면 context data"""
         game = Game.objects.filter(pk=game_id)
+        #codes = list(game[0].product.code_set.order_by('month').values_list('code', flat=True))
         entries = game[0].entry_set.all()
         exits = game[0].exit_set.all()
+        if game[0].product:
+            codes = list(game[0].product.code_set.order_by('month').values_list('code', flat=True))
+        else:
+            codes = []
+        
         context = dict(
             info=game.values()[0],
+            codes = codes,
             entries=[entry for entry in entries.values()],
             exits=[ex for ex in exits.values()]
         )
@@ -271,17 +272,15 @@ class AccountView(ListView):
     model = Account
     template_name = 'trading/account.html'
     context_object_name = 'account'
-    paginate_by = 30
+    paginate_by = 15
     queryset = Account.objects.order_by('-date')
     #ordering = ['-id']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        profit_usd = Exit.objects.all().aggregate(Sum('profit'))['profit__sum']
         context['total'] = Account.objects.all().aggregate(
             krw=Sum('krw'),
-            usd=Sum('usd') + profit_usd,
+            usd=Sum('usd'),
             cash=Sum('cash')
         )
-        context['total']['profit_usd'] = float(profit_usd)
         return context

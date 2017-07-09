@@ -2,7 +2,7 @@ from django.db import models
 from django.forms import ModelForm
 from django import forms
 from django.db.models import Sum
-from datetime import date
+from datetime import date, timedelta
 
 # Create your models here.
 class Product(models.Model):
@@ -25,6 +25,7 @@ class Product(models.Model):
     notation = models.PositiveSmallIntegerField() # 진법
     decimal_places = models.PositiveSmallIntegerField()
     last_update = models.DateTimeField()
+    is_favorite = models.BooleanField(blank=True, default=False)
 
 
     def __str__(self):
@@ -57,6 +58,7 @@ class Game(models.Model):
     #결과
     profit = models.DecimalField(null=True, blank=True, max_digits=20, decimal_places=3) #손익
     profit_per_contract = models.DecimalField(null=True, blank=True, max_digits=20, decimal_places=3) #단위손익
+    profit_to_risk = models.DecimalField(null=True, blank=True, max_digits=10, decimal_places=2)
     commission = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True) #수수료
 
     #완료
@@ -69,10 +71,12 @@ class Game(models.Model):
         agg = self.exit_set.all().aggregate(
             profit=Sum('profit'),
             commission=Sum('commission'),
-            ppc=Sum('profit_per_contract')
-            )
+            ppc=Sum('profit_per_contract'),
+            ptr=Sum('ptr_ratio')
+        )
         self.profit = agg.get('profit') if agg.get('profit') else 0
         self.profit_per_contract = agg.get('ppc')/self.exit_set.all().count() if agg.get('ppc') else 0
+        self.profit_to_risk = agg.get('ptr')/self.exit_set.all().count() if agg.get('ptr') else 0
         self.commission = agg.get('commission') if agg.get('commission') else 0
         super(Game, self).save(*args, **kwargs)
 
@@ -82,12 +86,13 @@ class Game(models.Model):
 class Entry(models.Model):
     """ 진입 내역 """
     game = models.ForeignKey('Game', on_delete=models.CASCADE)
+    code = models.ForeignKey('Code', on_delete=models.PROTECT, null=True, blank=True)
     entry_date = models.DateTimeField() #진입날짜
     contracts = models.PositiveSmallIntegerField(default=1) #계약수
     entry_price = models.DecimalField(max_digits=20, decimal_places=7) #진입가격
     loss_cut = models.DecimalField(max_digits=20, decimal_places=7) #로스컷
     plan = models.CharField(max_length=50, null=True, blank=True) #매매전략
-    comment = models.CharField(max_length=100, null=True, blank=True) #비고
+    done = models.BooleanField(default=False)
 
     def __str__(self):
         return self.game.name+' #'+str(self.id)
@@ -95,8 +100,8 @@ class Entry(models.Model):
 
 class Exit(models.Model):
     """ 청산 내역 """
-    game = models.ForeignKey('Game', on_delete=models.CASCADE)
-    entry = models.ForeignKey('Entry', on_delete=models.CASCADE)
+    game = models.ForeignKey('Game', on_delete=models.CASCADE, null=True, blank=True)
+    entry = models.ForeignKey('Entry', on_delete=models.CASCADE, null=True, blank=True)
     exit_date = models.DateTimeField() #청산날짜
     contracts = models.PositiveSmallIntegerField(default=1) #계약수
     exit_price = models.DecimalField(max_digits=20, decimal_places=7) #청산가격
@@ -110,7 +115,7 @@ class Exit(models.Model):
 
     def save(self, *args, **kwargs):
         # 손익 계산
-        if self.game.product:
+        if self.game and self.game.product:
             product = self.game.product
             price_diff = (self.exit_price - self.entry.entry_price) * self.game.position
             tick_diff = round(price_diff/product.tick_unit)
@@ -120,10 +125,50 @@ class Exit(models.Model):
             self.profit = tick_diff * self.contracts * product.tick_value - self.commission
             self.holding_period = self.exit_date - self.entry.entry_date
             self.ptr_ratio = self.profit_per_contract / risk if risk else 0
+        
+        if self.entry:
+            exit_cons = self.entry.exit_set.aggregate(Sum('contracts'))['contracts__sum']
+            exit_cons = exit_cons + self.contracts if exit_cons else self.contracts
+            entry_cons = self.entry.contracts
+
+            if entry_cons == exit_cons:
+                self.entry.done = True
+            elif entry_cons > exit_cons:
+                self.entry.done = False
+            else:
+                raise ValueError("exit contracts can not be grather than entry contracts")
+            self.entry.save()
+        
         super(Exit, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.id)
+        return str(self.exit_date)
+
+class Equity(models.Model):
+    date = models.DateField()
+    principal = models.DecimalField(max_digits=10, decimal_places=2) #투자원금
+    profit = models.DecimalField(default=0, max_digits=10, decimal_places=2) #확정손익
+    estimated_profit = models.DecimalField(default=0, max_digits=10, decimal_places=2) #평가손익
+    #total = models.DecimalField(max_digits=10, decimal_places=2) #총자산
+    
+    # equity db 업데이트
+    def update_equity(self):
+        self.principal = Account.objects.filter(date__lte=self.date).aggregate(Sum('usd'))['usd__sum']
+        self.profit = Exit.objects.filter(exit_date__lt=self.date).aggregate(Sum('profit'))['profit__sum']
+        self.estimated_profit = 0
+        for entry in  Entry.objects.filter(done=False):
+            product = entry.game.product
+            exit_cons = entry.exit_set.aggregate(Sum('contracts'))['contracts__sum']
+            contracts = entry.contracts - exit_cons if exit_cons else entry.contracts
+            price_diff = (entry.code.ec_price - entry.entry_price) * entry.game.position
+            tick_diff = round(price_diff/product.tick_unit)
+            estim_profit = tick_diff * product.tick_value * contracts
+            self.estimated_profit += estim_profit
+        self.save()
+    
+    def __str__(self):
+        return self.date.strftime("%Y-%m-%d")
+
 
 class Account(models.Model):
     """
@@ -150,7 +195,7 @@ class GameForm(ModelForm):
         ]
 
 class EntryForm(ModelForm):
-    entry_date = forms.DateTimeField(input_formats=['%Y-%m-%dT%H:%M'])
+    entry_date = forms.DateTimeField(input_formats=['%Y-%m-%d'])
     class Meta:
         model = Entry
         fields = [
@@ -159,11 +204,10 @@ class EntryForm(ModelForm):
             'contracts',
             'loss_cut',
             'plan',
-            'comment'
         ]
 
 class ExitForm(ModelForm):
-    exit_date = forms.DateTimeField(input_formats=['%Y-%m-%dT%H:%M'])
+    exit_date = forms.DateTimeField(input_formats=['%Y-%m-%d'])
     class Meta:
         model = Exit
         fields = [
@@ -171,3 +215,22 @@ class ExitForm(ModelForm):
             'exit_price',
             'contracts',
         ]
+
+
+## Helper method #3
+def recreate_equity():
+    """ equity 테이블 초기생성시키는 함수"""
+    dates = []
+    for item in Exit.objects.all():
+        dates.append(item.exit_date.date())
+    dates = list(set(dates))
+    dates.sort()
+    for ndate in dates:
+        equity = Equity()
+        equity.date = ndate
+        #equity, _ = Equity.objects.get_or_create(date=ndate)
+        principal = Account.objects.filter(date__lte=ndate).aggregate(Sum('usd'))['usd__sum']
+        equity.principal = principal if principal else 0
+        profit = Exit.objects.filter(exit_date__lte=ndate).aggregate(Sum('profit'))['profit__sum']
+        equity.profit = profit if profit else 0
+        equity.save()

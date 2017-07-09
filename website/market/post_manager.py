@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from channels import Channel
 from channels.log import setup_logger
-from trading.models import Product, Code
+from trading.models import Product, Code, Equity, Account, Entry, Exit
 
 logger = setup_logger(__name__)
 COMISSION = 7 #수수료
@@ -113,6 +113,13 @@ class post:
             "method": "log",
             "data": msg
         })
+
+        # Equity DB 업데이트 
+        try:
+            equity = Equity.objects.get(date=date.today())
+        except Equity.DoesNotExist:
+            equity = Equity(date=date.today())
+        equity.update_equity()
 
     @staticmethod
     def get_active():
