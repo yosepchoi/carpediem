@@ -114,11 +114,12 @@ class post:
             "data": msg
         })
 
-        # Equity DB 업데이트 
+        # Equity DB 업데이트
+        yesterday = date.today() - timedelta(1)
         try:
-            equity = Equity.objects.get(date=date.today())
+            equity = Equity.objects.get(date=yesterday)
         except Equity.DoesNotExist:
-            equity = Equity(date=date.today())
+            equity = Equity(date=yesterday)
         equity.update_equity()
 
     @staticmethod

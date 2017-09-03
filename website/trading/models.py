@@ -154,7 +154,7 @@ class Equity(models.Model):
     # equity db 업데이트
     def update_equity(self):
         self.principal = Account.objects.filter(date__lte=self.date).aggregate(Sum('usd'))['usd__sum']
-        self.profit = Exit.objects.filter(exit_date__lt=self.date).aggregate(Sum('profit'))['profit__sum']
+        self.profit = Exit.objects.filter(exit_date__lte=self.date).aggregate(Sum('profit'))['profit__sum']
         self.estimated_profit = 0
         for entry in  Entry.objects.filter(done=False):
             product = entry.game.product

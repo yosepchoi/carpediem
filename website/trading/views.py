@@ -32,14 +32,16 @@ class Home(TemplateView):
         # source data 가공하기
         queryset= Equity.objects.all().order_by('date')
         equity = defaultdict(list)
-        estim_y = 0 #변동성 계산용
+        total_y = 0 #변동성 계산용
         for idx, item in enumerate(queryset):
             date = datetime.combine(item.date, datetime.min.time()).timestamp()*1000 + idx
             principal = float(item.principal)
             profit = float(item.profit)
             profit_estim = float(item.estimated_profit)
-            volatility = abs(profit_estim - estim_y)/(principal + profit) * 100
-            estim_y = profit_estim     
+            total = principal + profit + profit_estim
+            volatility = abs((total-total_y)/total)*100 if total > 0 else 0
+            
+            total_y = total     
             
             equity['principal'].append([date, principal])
             equity['profit'].append([date, profit])

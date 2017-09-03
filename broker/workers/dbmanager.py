@@ -180,11 +180,13 @@ class Manager:
             code = self.query.get_field_data(outblock, 'Symbol', i) #종목코드
             codename = self.query.get_field_data(outblock, 'SymbolNm', i) #종목명
             name = self.query.get_field_data(outblock, 'BscGdsNm', i) #기초 상품명
-            month = datetime(
-                int(self.query.get_field_data(outblock, 'LstngYr', i)),
-                int(Helper.get_month(self.query.get_field_data(outblock, 'LstngM', i))),
-                1
-            ) #월물
+            # o3101 'LstngYr이 이상하게 들어와서 codename parsing으로 긴급조치함(170808)
+            #month = datetime(
+            #    int(self.query.get_field_data(outblock, 'LstngYr', i)),
+            #    int(Helper.get_month(self.query.get_field_data(outblock, 'LstngM', i))),
+            #    1
+            #) #월물
+            month = datetime(int(codename[-8:-4]), int(codename[-3:-1]), 1)
 
             # 마이크로 상품, 거래량 적은 상품 제외
             if ('micro' in name.lower())\
@@ -283,6 +285,8 @@ class Manager:
         # 최근 2일치 거래량 수집
         for i in range(3):
             date = self.query.get_field_data(tr.OUTBLOCK, 'chedate', i)
+            if not date:
+                continue
             date = datetime.strptime(date, '%Y%m%d')
             vol = int(self.query.get_field_data(tr.OUTBLOCK, 'volume', i))
             price = float(self.query.get_field_data(tr.OUTBLOCK, 'price', i) or 0)
@@ -626,7 +630,11 @@ class Manager:
                 continue
 
             else:
-                idx = self.d_cursor.cols.mapper[-1] + 1 #매핑 인덱스
+                if len(self.d_cursor.cols.mapper):
+                    idx = self.d_cursor.cols.mapper[-1] + 1 #매핑 인덱스
+                else:
+                    idx = 0
+                
                 mapper = (ndate, idx)
                 dates.append(mapper)
                 digit = self.active['decimal_places']

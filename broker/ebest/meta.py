@@ -76,6 +76,24 @@ class TR:
 class Helper:
 
     @staticmethod
+    def classify_group(product):
+        """
+        시장 구분
+        Grain(곡물)
+        Metals(금속)
+        Meats(육류)
+        Energy(에너지)
+        Tropical(과일)
+        Rates(금리)
+        Equities(지수)
+        Fibers(섬유)
+        Currencies(통화)
+        """
+        pass
+
+
+
+    @staticmethod
     def market_symbol(gubun):
         if gubun == '001':
             return 'IDX'
