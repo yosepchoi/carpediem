@@ -135,6 +135,7 @@ class post:
                    .values_list('group', 'name', 'active', 'activated_date',\
                                 'price_gap', 'decimal_places', 'tick_unit')
         active = []
+        
         for item in products:
             active.append({
                 'group': item[0],
