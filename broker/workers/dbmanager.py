@@ -13,10 +13,7 @@ from channels import Channel
 
 from ebest.xingAPI import Session, XAEvents, Query, Real
 from ebest.meta import TR, Helper
-#from trader.util import util
-#from db_manager.manager import Factory
 from model import DateMapper, Minute, Daily
-
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..\\..\\data')
 
@@ -359,6 +356,7 @@ class Manager:
                 code['month'] = code['month'].strftime("%Y%m")
 
         self.reply("marketinfo", self.products, name="post-work")
+ 
         self.flush()
 
 

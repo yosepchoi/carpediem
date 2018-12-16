@@ -16,6 +16,8 @@ from carpediem.asgi import channel_layer
 
 WORKERS = ['broker','manager']
 # websocket으로 보낸 action을 중개함
+
+
 def run(worker):
     """
     웹으로부터 channel을 통해 요청을 받아 처리하는 함수
@@ -23,6 +25,7 @@ def run(worker):
     broker: 시장 정보, 실시간 데이터, 주문 관리
     dbmanager: 거래 정보 다운로드 및 갱신
     """
+
 
     if worker == 'broker':
         ebest = Broker()
@@ -71,7 +74,7 @@ def run(worker):
                     logger.debug("return: %s", reply)
                     Channel("web").send(reply)
 
-        time.sleep(0.001)
+        time.sleep(0.01)
 
 
 

@@ -37,6 +37,7 @@ def ws_message(message):
         if data["worker"] == "manager" and data["args"]["todo"] == "rawdata":
             data['args']['activeinfo'] = post.get_active()
 
+
         # 전체 자동 진행 flag
         if data["worker"] == "manager" and "timeframe" in data["args"]\
            and data["args"]["timeframe"] == "all":
